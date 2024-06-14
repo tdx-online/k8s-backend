@@ -279,9 +279,13 @@ func getPods(c *gin.Context) {
 
 	var podInfos []PodInfo
 	for _, pod := range pods.Items {
-		images := []string{}
+		var images []string
 		for _, container := range pod.Spec.Containers {
 			images = append(images, container.Image)
+		}
+		if pod.Namespace == "kube-system" || pod.Namespace == "kube-public" ||
+			pod.Namespace == "kube-node-lease" || pod.Namespace == "kubernetes-dashboard" {
+			continue
 		}
 		podInfos = append(podInfos, PodInfo{
 			Name:      pod.Name,
@@ -361,7 +365,10 @@ func getDeployments(c *gin.Context) {
 		for _, container := range deployment.Spec.Template.Spec.Containers {
 			images = append(images, container.Image)
 		}
-
+		if deployment.Namespace == "kube-system" || deployment.Namespace == "kube-public" ||
+			deployment.Namespace == "kube-node-lease" || deployment.Namespace == "kubernetes-dashboard" {
+			continue
+		}
 		deploymentInfos = append(deploymentInfos, DeploymentInfo{
 			Name:              deployment.Name,
 			Namespace:         deployment.Namespace,
@@ -440,7 +447,10 @@ func getServices(c *gin.Context) {
 		for _, port := range service.Spec.Ports {
 			ports = append(ports, fmt.Sprintf("%d/%s", port.Port, port.Protocol))
 		}
-
+		if service.Namespace == "kube-system" || service.Namespace == "kube-public" ||
+			service.Namespace == "kube-node-lease" || service.Namespace == "kubernetes-dashboard" {
+			continue
+		}
 		serviceInfos = append(serviceInfos, ServiceInfo{
 			Name:      service.Name,
 			Namespace: service.Namespace,
@@ -517,7 +527,10 @@ func getConfigMaps(c *gin.Context) {
 		for key := range configMap.Data {
 			keys = append(keys, key)
 		}
-
+		if configMap.Namespace == "kube-system" || configMap.Namespace == "kube-public" ||
+			configMap.Namespace == "kube-node-lease" || configMap.Namespace == "kubernetes-dashboard" {
+			continue
+		}
 		configMapInfos = append(configMapInfos, ConfigMapInfo{
 			Name:      configMap.Name,
 			Namespace: configMap.Namespace,
