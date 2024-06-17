@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -222,15 +223,37 @@ func getClusterLoad(c *gin.Context) {
  */
 func createPod(c *gin.Context) {
 	var pod v1.Pod
-	if err := c.ShouldBindJSON(&pod); err != nil {
-		if err := c.ShouldBindYAML(&pod); err != nil {
-			if err := c.ShouldBindBodyWithJSON(&pod); err != nil {
-				if err := c.ShouldBindBodyWithYAML(&pod); err != nil {
-					c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-					return
-				}
-			}
+
+	//if err := c.ShouldBindJSON(&pod); err != nil {
+	//	if err := c.ShouldBindYAML(&pod); err != nil {
+	//		if err := c.ShouldBindBodyWithJSON(&pod); err != nil {
+	//			if err := c.ShouldBindBodyWithYAML(&pod); err != nil {
+	//				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	//				return
+	//			}
+	//		}
+	//	}
+	//}
+
+	contentType := c.Request.Header.Get("Content-Type")
+	switch contentType {
+	case "application/json":
+		if err := c.ShouldBindJSON(&pod); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
+	case "application/x-yaml":
+		if err := c.ShouldBindBodyWith(&pod, binding.YAML); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	default:
+		c.JSON(http.StatusUnsupportedMediaType, gin.H{"error": "Unsupported content type"})
+		return
+	}
+
+	if pod.Namespace == "" {
+		pod.Namespace = "default"
 	}
 
 	createdPod, err := clientset.CoreV1().Pods(pod.Namespace).Create(context.TODO(), &pod, metav1.CreateOptions{})
@@ -304,15 +327,36 @@ func getPods(c *gin.Context) {
  */
 func createDeployment(c *gin.Context) {
 	var deployment appsv1.Deployment
-	if err := c.ShouldBindJSON(&deployment); err != nil {
-		if err := c.ShouldBindYAML(&deployment); err != nil {
-			if err := c.ShouldBindBodyWithJSON(&deployment); err != nil {
-				if err := c.ShouldBindBodyWithYAML(&deployment); err != nil {
-					c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-					return
-				}
-			}
+	//if err := c.ShouldBindJSON(&deployment); err != nil {
+	//	if err := c.ShouldBindYAML(&deployment); err != nil {
+	//		if err := c.ShouldBindBodyWithJSON(&deployment); err != nil {
+	//			if err := c.ShouldBindBodyWithYAML(&deployment); err != nil {
+	//				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	//				return
+	//			}
+	//		}
+	//	}
+	//}
+
+	contentType := c.Request.Header.Get("Content-Type")
+	switch contentType {
+	case "application/json":
+		if err := c.ShouldBindJSON(&deployment); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
+	case "application/x-yaml":
+		if err := c.ShouldBindBodyWith(&deployment, binding.YAML); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	default:
+		c.JSON(http.StatusUnsupportedMediaType, gin.H{"error": "Unsupported content type"})
+		return
+	}
+
+	if deployment.Namespace == "" {
+		deployment.Namespace = "default"
 	}
 
 	createdDeployment, err := clientset.AppsV1().Deployments(deployment.Namespace).Create(context.TODO(), &deployment, metav1.CreateOptions{})
@@ -386,15 +430,37 @@ func getDeployments(c *gin.Context) {
  */
 func createService(c *gin.Context) {
 	var service v1.Service
-	if err := c.ShouldBindJSON(&service); err != nil {
-		if err := c.ShouldBindYAML(&service); err != nil {
-			if err := c.ShouldBindBodyWithJSON(&service); err != nil {
-				if err := c.ShouldBindBodyWithYAML(&service); err != nil {
-					c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-					return
-				}
-			}
+	//if err := c.ShouldBindJSON(&service); err != nil {
+	//	if err := c.ShouldBindYAML(&service); err != nil {
+	//		if err := c.ShouldBindBodyWithJSON(&service); err != nil {
+	//			if err := c.ShouldBindBodyWithYAML(&service); err != nil {
+	//				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	//				return
+	//			}
+	//		}
+	//	}
+	//}
+
+	contentType := c.Request.Header.Get("Content-Type")
+	switch contentType {
+	case "application/json":
+		if err := c.ShouldBindJSON(&service); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
+	case "application/x-yaml":
+		if err := c.ShouldBindBodyWith(&service, binding.YAML); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	default:
+		c.JSON(http.StatusUnsupportedMediaType, gin.H{"error": "Unsupported content type"})
+		return
+	}
+
+	if service.Namespace == "" {
+		service.Namespace = "default"
+
 	}
 
 	createdService, err := clientset.CoreV1().Services(service.Namespace).Create(context.TODO(), &service, metav1.CreateOptions{})
@@ -468,15 +534,36 @@ func getServices(c *gin.Context) {
  */
 func createConfigMap(c *gin.Context) {
 	var configMap v1.ConfigMap
-	if err := c.ShouldBindJSON(&configMap); err != nil {
-		if err := c.ShouldBindYAML(&configMap); err != nil {
-			if err := c.ShouldBindBodyWithJSON(&configMap); err != nil {
-				if err := c.ShouldBindBodyWithYAML(&configMap); err != nil {
-					c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-					return
-				}
-			}
+	//if err := c.ShouldBindJSON(&configMap); err != nil {
+	//	if err := c.ShouldBindYAML(&configMap); err != nil {
+	//		if err := c.ShouldBindBodyWithJSON(&configMap); err != nil {
+	//			if err := c.ShouldBindBodyWithYAML(&configMap); err != nil {
+	//				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	//				return
+	//			}
+	//		}
+	//	}
+	//}
+
+	contentType := c.Request.Header.Get("Content-Type")
+	switch contentType {
+	case "application/json":
+		if err := c.ShouldBindJSON(&configMap); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
+	case "application/x-yaml":
+		if err := c.ShouldBindBodyWith(&configMap, binding.YAML); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	default:
+		c.JSON(http.StatusUnsupportedMediaType, gin.H{"error": "Unsupported content type"})
+		return
+	}
+
+	if configMap.Namespace == "" {
+		configMap.Namespace = "default"
 	}
 
 	createdConfigMap, err := clientset.CoreV1().ConfigMaps(configMap.Namespace).Create(context.TODO(), &configMap, metav1.CreateOptions{})
